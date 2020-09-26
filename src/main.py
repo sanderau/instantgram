@@ -48,6 +48,7 @@ def insert_user(username, email, password):
 
 	query = "INSERT INTO users (username, email, password) VALUES ('{}', '{}', '{}')".format(username, email, password)
 	cursor.execute(query)
+	cnx.commit()
 
 	cursor.close()
 
