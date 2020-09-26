@@ -1,3 +1,13 @@
 #!/bin/bash
 
-docker run --name=mysql --env="MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD" -p 3306:3306 -d mysql:latest
+# check to see if there is a container running
+out=$(docker ps -la)
+tocheck="mysql"
+
+#if there is a container with the mysql name, then remove it
+if [[ "$out" == *"$tocheck"* ]]; then
+	docker rm mysql
+fi
+
+#run the docker container to hold mysql
+docker run --name=mysql -e MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASSWORD" -p 3306:3306 -d mysql:latest
