@@ -1,28 +1,32 @@
 #!/usr/bin/python3.8
 
 import flask
-import sqlalchemy
-import pymysql
+import mysql.connector
+import os
 
+#config and set up flask
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
+
+#get those env vars, so you people github cant hurt me
+mysql_root_password = os.environ['MYSQL_ROOT_PASSWORD']
+mysql_user = os.environ['MYSQL_USER']
+mysql_host = os.environ['MYSQL_HOST']
+mysql_db = os.environ['MYSQL_DB']
+
+#get database connection values
+config = { 
+	'user': mysql_user,
+	'password': mysql_root_password,
+	'host': mysql_host,
+	'database': mysql_db
+}
+
+cnx = mysql.connector.connect(**config)
 
 @app.route('/', methods=['GET'])
 def home():
 	return "<h1> Hello World! </h1>"
 
-@app.route('/login', methods=['GET'])
-def login(req, res):
-	username = req.username
-	password = req.password
-
-	#hash the password
-
-	#ask mysql if this combo exists
-
-	#return token if correct
-	#false if not
-
-	return res
-
+# run app
 app.run()
