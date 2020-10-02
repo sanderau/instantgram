@@ -3,6 +3,9 @@
 # create the path to volume
 path=$(pwd)
 
+# get root password from env var
+pswd=$(echo "$MYSQL_ROOT_PASSWORD")
+
 # check to see if there is a container running
 out=$(docker ps -la)
 tocheck="mysql"
@@ -13,4 +16,4 @@ if [[ "$out" == *"$tocheck"* ]]; then
 fi
 
 #run the docker container to hold mysql
-docker run --name=mysql -e MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASSWORD" -v ${path}/vol:/var/lib/mysql -p 3306:3306 -d mysql:latest
+docker run --name=mysql -e MYSQL_ROOT_PASSWORD="${pswd}" -v ${path}/vol:/var/lib/mysql -p 3306:3306 -d mysql:latest
