@@ -4,6 +4,7 @@ import flask
 import werkzeug
 import mysql.connector
 import os
+import hashlib
 
 #config and set up flask
 app = flask.Flask(__name__)
@@ -43,10 +44,26 @@ def user_exists(username):
 	else:
 		return True # The user does exist, so return true
 
-def insert_user(username, email, password):
+
+def verify_credentials(username, email, password_hash):
 	cursor = cnx.cursor()
 
-	query = "INSERT INTO users (username, email, password) VALUES ('{}', '{}', '{}')".format(username, email, password)
+	query = "SELECT * FROM users WHERE username = '{}' and email = '{}' and password = '{}'".format(username, email, password_hash)
+
+	cursor.execute(query)
+	r = cursor.fetchone()
+
+	cursor.close()
+
+	if r == None:
+		return False # invalid credentials
+	else:
+		return True # valid credentials
+
+def insert_user(username, email, password_hash):
+	cursor = cnx.cursor()
+
+	query = "INSERT INTO users (username, email, password) VALUES ('{}', '{}', '{}')".format(username, email, password_hash)
 	cursor.execute(query)
 	cnx.commit()
 
@@ -84,11 +101,40 @@ def sign_up():
 	if( user_exists(username) ):
 		flask.abort(409, description="User already exists")
 	else:
-		insert_user(username, email, password)
+		hash_func = hashlib.sha256()
+		hash_func.update(password.encode())
+		insert_user(username, email, hash_func.digest())
 		resp = flask.jsonify(success=True)
 		return resp
-		
-		
+
+
+@app.route('/signin', methods=['PUT'])
+def sign_in():
+	# get json data from request
+	json_data = flask.request.json
+
+	#check to see if they sent all the correct data
+	if ( "username" not in json_data ) or ( "password" not in json_data ) or ( "email" not in json_data ):
+		flask.abort(400, description="Did not include all fields")
+
+	username = json_data["username"]
+
+	# abort if user does not exist
+	if (not user_exists(username)):
+		flask.abort(410, description="User does not exist")
+
+	password = json_data["password"]
+	email = json_data["email"]
+
+	# check if password and email match inputted username
+	hash_func = hashlib.sha256()
+	hash_func.update(password.encode())
+	if verify_credentials(username, email, hash_func.digest()):
+		resp = flask.jsonify(success=True)
+	else:
+		resp = flask.jsonify(success=False)
+	return resp
+
 
 @app.route('/', methods=['GET'])
 def home():
